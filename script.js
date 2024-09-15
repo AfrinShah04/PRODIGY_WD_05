@@ -7,12 +7,23 @@ function getWeather(){
     }
     const currentWeatherUrl=`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
 
-    fetch(currentWeatherUrl).then(response=> response.json()).then(data=>{
-        displayWeather(data);
-    }).catch(error =>{
-        console.error('Error fatching current weather data: ',error);
-        alert('Error fatching current weather data. Please try again.');
-    }); 
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', currentWeatherUrl, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                const data = JSON.parse(xhr.responseText);
+                displayWeather(data);
+            } else if (xhr.status === 404) {
+                const data = JSON.parse(xhr.responseText);
+                displayWeather(data); // Handle city not found scenario
+            } else {
+                alert('Error fetching current weather data. Please try again.');
+                console.error('Error fetching current weather data: ', xhr.status);
+            }
+        }
+    };
+    xhr.send();
 }
 
 function displayWeather(data){
@@ -25,7 +36,9 @@ function displayWeather(data){
 
     if(data.cod=='404'){
         info.innerHTML=`<p>${data.message}</p>`;
-        icon.src="city_not_found.png";
+        icon.src="city_not_found.png"; // Display "city not found" image
+        icon.alt="City not found";
+        showImage();
     }
     else{
         const cityName=data.name;
@@ -34,13 +47,13 @@ function displayWeather(data){
         const iconCode=data.weather[0].icon;
 
         const iconUrl=`https://openweathermap.org/img/wn/${iconCode}@4x.png`;
-    
+
         temp.innerHTML=`<p>${temperature}&deg;C</p>`;
         info.innerHTML=`<p>${cityName}</p><p>${description}</p>`;
         icon.src=iconUrl;
         icon.alt=description;
+        showImage();
     }
-    showImage();
 }
 
 function showImage() {
